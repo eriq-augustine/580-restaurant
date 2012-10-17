@@ -24,23 +24,50 @@ def cleanFile(fileObj):
    contents = re.sub(allTagRegex('span'), '', contents, flags=re.IGNORECASE)
    contents = re.sub(allTagRegex('body'), '', contents, flags=re.IGNORECASE)
    contents = re.sub(allTagRegex('html'), '', contents, flags=re.IGNORECASE)
+   contents = re.sub(allTagRegex('strong'), '', contents, flags=re.IGNORECASE)
+   contents = re.sub(allTagRegex('div'), '', contents, flags=re.IGNORECASE)
 
-   # Before any other nonsense, replace any breaks INSIDE <p> with spaces. Thanks, Aldrin
-   #\<\s*p\s*[^\>]*\>(.*)\<\s*\/\s*p\s*[^\>]*\>
+   # Aldrin's review seems to be the only ones that cannot be parsed like all the others.
+   # If we just remove all the breaks, it should be ok.
+   #if (re.search(('(aldrin)|(montana)|' +
+   #               '(Mee Heng Low is a noodle house with a vague resemblance to Chinese noodles)|' +
+   #               '(Upper Crust Trattoria is an italian restaurant in San Luis Obispo)|'+
+   #               '(Moe\'s Smokehouse BBQ is a BBQ restaurant that primarily serves burgers)',
+   #               contents, flags=re.IGNORECASE))):
+   if (re.search('(montana)|(Mee Heng Low is a noodle house with a vague resemblance to Chinese noodles)|(Upper Crust Trattoria is an italian restaurant in San Luis Obispo)|(Moe\'s Smokehouse BBQ is a BBQ restaurant that primarily serves burgers)', contents, flags=re.IGNORECASE)):
+      contents = re.sub(allTagRegex('br'), ' ', contents, flags=re.IGNORECASE)
 
    contents = re.sub(allTagRegex('p'), '\n', contents, flags=re.IGNORECASE)
    contents = re.sub(allTagRegex('br'), '\n', contents, flags=re.IGNORECASE)
 
+   # Replace useless random characters.
+   # c2 a0 = nbsp
+   # e2 80 9c = left double quote
+   # e2 80 9d = right double quote
+   # e2 80 99 = right single quote
+   # c3 a9 = e with accent aigu
+   # e2 80 93 = EN dash
+
+   contents = re.sub('\xc2\xa0', '', contents)
+   contents = re.sub('\xe2\x80\x9c', '"', contents)
+   contents = re.sub('\xe2\x80\x9d', '"', contents)
+   contents = re.sub('\xe2\x80\x99', '\'', contents)
+   contents = re.sub('\xc3\xa9', 'e', contents)
+   contents = re.sub('\xe2\x80\x93', '', contents)
+
    cleanContents = ''
    # Make another pass and verify that all the parts are there
-   #TODO
    for line in contents.split('\n'):
       line = line.strip()
       if len(line) != 0:
+         # If this is the not the first line, and it is a reviewers name. Then put in another \n.
+         if len(cleanContents) != 0 and line.startswith('REVIEWER'):
+            cleanContents += '\n'
+
          cleanContents += line + '\n'
 
-   print cleanContents
-   sys.exit(0)
+   # TEST
+   sys.stdout.write(cleanContents)
 
    return cleanContents
 
@@ -92,8 +119,8 @@ def readReview(fileObj):
    review['venueReview'] = grabPara(False, fileObj)
    review['overallReview'] = grabPara(False, fileObj)
 
-#   # Consume a final line, this will do nothing if it is one review per file,
-#   #  but if there are multiple reviews in a file, it will take the sep space.
+   # Consume a final line, this will do nothing if it is one review per file,
+   #  but if there are multiple reviews in a file, it will take the sep space.
    line = fileObj.readline()
    if len(line) == 0:
       fileObj.close()
@@ -106,8 +133,15 @@ def readReviews(targetDir):
    reviews = []
    listing = os.listdir(targetDir)
    for baseFile in listing:
+      # Skip hidden, stupid mac files.
+      if baseFile.startswith('.'):
+         continue
+
       fileName = targetDir + '/' + baseFile
       fileObj = open(fileName, 'r')
+
+      content = cleanFile(fileObj)
+      continue
 
       count = 0
 
@@ -130,7 +164,9 @@ def readAllTests():
 
 if __name__ == '__main__':
    #fileObj = open('training/Matthew Parker_53951.html', 'r')
-   fileObj = open('raw/training/Aldrin Montana_12349.html', 'r')
-   cleanFile(fileObj)
-   #reviews = readAllReviews()
+   #fileObj = open('raw/training/Aldrin Montana_12349.html', 'r')
+   #fileObj = open('raw/training/Jacob Muir_266510.html', 'r')
+   #fileObj = open(sys.argv[1], 'r')
+   #cleanFile(fileObj)
+   reviews = readAllReviews()
    #print reviews

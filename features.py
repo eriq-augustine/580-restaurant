@@ -41,8 +41,9 @@ class FeatureSetGenerator:
       features = {}
 
       document = document.lower()
-      document = re.sub('\(|\)|,|\.|:|;|"|~', ' ', document)
-      document = re.sub('(!|\?)', ' \1 ', document)
+      document = re.sub('\[|\]|\(|\)|,|\.|:|;|"|~|\/|\\|(--)', ' ', document)
+      document = re.sub('!', ' __exclamation_point__ ', document)
+      document = re.sub('\?', ' __quertion__mark__ ', document)
       document = re.sub("'|-|\$", '', document)
 
       unigrams = nltk.tokenize.word_tokenize(document)
