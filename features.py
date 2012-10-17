@@ -2,6 +2,19 @@ import nltk
 import re
 import sys
 
+# This is the core function for stripping out punct and splitting into words
+def toUnigrams(document):
+   document = document.lower()
+   document = re.sub('\[|\]|\(|\)|,|\.|:|;|"|~|\/|\\|(--)', ' ', document)
+   document = re.sub('!', ' __exclamation_point__ ', document)
+   document = re.sub('\?', ' __quertion__mark__ ', document)
+   document = re.sub("'|-|\$", '', document)
+
+   return nltk.tokenize.word_tokenize(document)
+
+def batchStem(unigrams, stemmer = nltk.stem.PorterStemmer()):
+   return [stemmer.stem(gram) for gram in unigrams]
+
 class FeatureSetGenerator:
    def __init__(self, minOccur = 4, maxOccurPercent = 0.50, stemmer = nltk.stem.PorterStemmer()):
       # features must be in 5 docs before being included
@@ -40,14 +53,8 @@ class FeatureSetGenerator:
    def toFullFeatures(self, document, observeDefinedFeatures = False, compressSet = False):
       features = {}
 
-      document = document.lower()
-      document = re.sub('\[|\]|\(|\)|,|\.|:|;|"|~|\/|\\|(--)', ' ', document)
-      document = re.sub('!', ' __exclamation_point__ ', document)
-      document = re.sub('\?', ' __quertion__mark__ ', document)
-      document = re.sub("'|-|\$", '', document)
-
-      unigrams = nltk.tokenize.word_tokenize(document)
-      stemmedUnigrams = [self.stemmer.stem(gram) for gram in unigrams]
+      unigrams = toUnigrams(document)
+      stemmedUnigrams = batchStem(unigrams, self.stemmer)
 
       avgLen = 0
       for index in range(0, len(unigrams)):
