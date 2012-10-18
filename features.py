@@ -9,7 +9,7 @@ class NoStemmer:
 # This is the core function for stripping out punct and splitting into words
 def toUnigrams(document):
    document = document.lower()
-   document = re.sub('\[|\]|\(|\)|,|\.|:|;|"|~|\/|\\|(--)', ' ', document)
+   document = re.sub('\[|\]|\(|\)|,|\.|:|;|"|~|\/|\\|(--)|#', ' ', document)
    document = re.sub('!', ' __exclamation_point__ ', document)
    document = re.sub('\?', ' __quertion__mark__ ', document)
    document = re.sub("'|-|\$", '', document)
