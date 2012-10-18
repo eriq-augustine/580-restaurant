@@ -2,7 +2,9 @@ import os
 import re
 import sys
 
-TRAINING_DIR = 'training'
+#TEST
+#TRAINING_DIR = 'training'
+TRAINING_DIR = 'full/training'
 TEST_DIR = 'test'
 
 REVIEW_REGEX = '^(?:\<p\>)?(.+)(?:\<\/p\>)?$'

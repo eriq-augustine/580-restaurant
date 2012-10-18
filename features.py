@@ -2,6 +2,10 @@ import nltk
 import re
 import sys
 
+class NoStemmer:
+   def stem(self, word):
+      return word
+
 # This is the core function for stripping out punct and splitting into words
 def toUnigrams(document):
    document = document.lower()
@@ -16,7 +20,8 @@ def batchStem(unigrams, stemmer = nltk.stem.PorterStemmer()):
    return [stemmer.stem(gram) for gram in unigrams]
 
 class FeatureSetGenerator:
-   def __init__(self, minOccur = 4, maxOccurPercent = 0.50, stemmer = nltk.stem.PorterStemmer()):
+   #def __init__(self, minOccur = 4, maxOccurPercent = 0.50, stemmer = nltk.stem.PorterStemmer()):
+   def __init__(self, minOccur = 2, maxOccurPercent = 0.80, stemmer = nltk.stem.PorterStemmer()):
       # features must be in 5 docs before being included
       self.MIN_OCCURENCE = minOccur
       # features occuring in >20% of docs are stop words
@@ -63,23 +68,23 @@ class FeatureSetGenerator:
          avgLen += len(unigrams[index])
       avgLen /= float(len(unigrams))
 
-      bigrams = nltk.util.bigrams(stemmedUnigrams)
-      for gram in bigrams:
-         if not observeDefinedFeatures or gram in self.definedFeatures:
-            features[gram] = True
+      #bigrams = nltk.util.bigrams(stemmedUnigrams)
+      #for gram in bigrams:
+      #   if not observeDefinedFeatures or gram in self.definedFeatures:
+      #      features[gram] = True
 
       unique = len(set(unigrams))
 
-      # NB doesn't deal with numeric attributes, so rangeify them.
-      features['<$Unique Words$>'] = self.rangeify(unique, 10)
-      features['<$Average Word Length$>'] = self.rangeify(avgLen, 2)
-      features['<$Text Length$>'] = self.rangeify(len(document), 50)
-      features['<$Num Words$>'] = self.rangeify(len(unigrams), 20)
+      # NB doesn't deal well with numeric attributes, so rangeify them.
+      #features['<$Unique Words$>'] = self.rangeify(unique, 10)
+      #features['<$Average Word Length$>'] = self.rangeify(avgLen, 2)
+      #features['<$Text Length$>'] = self.rangeify(len(document), 50)
+      #features['<$Num Words$>'] = self.rangeify(len(unigrams), 20)
 
-      #features['<$Unique Words$>'] = unique
-      #features['<$Average Word Length$>'] = avgLen
-      #features['<$Text Length$>'] = len(document)
-      #features['<$Num Wdefined>'] = len(unigrams)
+      features['<$Unique Words$>'] = unique
+      features['<$Average Word Length$>'] = avgLen
+      features['<$Text Length$>'] = len(document)
+      features['<$Num Wdefined>'] = len(unigrams)
 
       if (not compressSet) and observeDefinedFeatures:
          for definedFeature in self.definedFeatures:

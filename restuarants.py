@@ -7,9 +7,13 @@ import nltk
 import parser
 import features
 
-def crossValidate(documents, classifierCreator = lambda trainSet: NBClassifier(trainSet),  numFolds = 4):
+def crossValidate(documents, classifierCreator = lambda trainSet: NBClassifier(trainSet),  numFolds = 4, seed = None):
+   if seed:
+      random.seed(seed)
+
    ordering = [i for i in range(0, len(documents))]
-   random.shuffle(ordering)
+   # TEST
+   #random.shuffle(ordering)
 
    folds = []
    for i in range(0, numFolds):
@@ -59,7 +63,13 @@ class NBClassifier:
    def __init__(self, trainingSet, fsg = features.FeatureSetGenerator()):
       self.fsg = fsg
       self.fsg.defineAllFeatures([ doc[0] for doc in trainingSet ])
-      self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet))
+
+      #self.classy = nltk.DecisionTreeClassifier.train(self.labeledDocsToFeatures(trainingSet))
+
+      self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.ELEProbDist)
+      #self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.LaplaceProbDist)
+      ##self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.MLEProbDist)
+      ##self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.GoodTuringProbDist)
 
    def classifyDocument(self, document):
       return self.classy.classify(self.fsg.toFeatures(document))
@@ -72,6 +82,11 @@ class NBClassifier:
 
    def accuracy(self, testSet):
       return nltk.classify.accuracy(self.classy, self.labeledDocsToFeatures(testSet))
+
+   def showInfo(self):
+      #TEST
+      #print self.classy.pp()
+      self.classy.show_most_informative_features(40)
 
    # documents = [ ( document, class ) ]
    # return = [ ( {features}, class ) ]
@@ -139,14 +154,15 @@ class WordWeightClassifier:
       # Get me some residuals, yum yum.
       squareResiduals = []
       for score in scores:
-         if score < mean:
-            #negatives.append(self.meanScore - score)
+         #if score < mean:
+         if score < self.meanScore:
+            negatives.append(self.meanScore - score)
             #negatives.append(mean - score)
-            negatives.append(score)
+            #negatives.append(score)
          else:
-            #positives.append(score - self.meanScore)
+            positives.append(score - self.meanScore)
             #positives.append(score - mean)
-            positives.append(score)
+            #positives.append(score)
 
          sign = 1
          if score < mean:
@@ -163,19 +179,42 @@ class WordWeightClassifier:
 
       #positiveScore = sum(positives)
       #negativeScore = sum(negatives)
-      positiveScore = sum(positives) * len(scores) / len(positives)
-      negativeScore = sum(negatives) * len(scores) / len(negatives)
-      evenScore = positiveScore / negativeScore * self.meanScore
-      print 'Even -- Positive: {0}, Negative: {1}, Even Score: {2}'.format(positiveScore, negativeScore, evenScore)
+      if len(positives) == 0:
+         positiveScore = 0.0005
+      else:
+         positiveScore = sum(positives)
+         #positiveScore = sum(positives) * len(scores) / len(positives)
+
+      if len(negatives) == 0:
+         negativeScore = 0.0005
+      else:
+         negativeScore = sum(negatives)
+         #negativeScore = sum(negatives) * len(scores) / len(negatives)
+
+      evenScore = positiveScore / negativeScore * mean
 
       sortedScores = sorted(scores)
       median = sortedScores[int(len(sortedScores) / 2)]
-      print 'Median: {0}'.format(median)
 
-      #print 'Mean: {0}, CrazyScore: {1}'.format(mean, crazyScore)
-      print 'Mean: {0}, CrazyScore: {1}, Real Score: {2}'.format(mean, crazyScore, document[1])
+      print 'Even -- Positive: {0}, Negative: {1}, Even Score: {2}'.format(positiveScore, negativeScore, evenScore)
+      print 'Mean: {0}, Median: {1}, CrazyScore: {2}, Real Score: {3}'.format(mean, median, crazyScore, document[1])
 
-      return median
+      rtn = 4
+      if positiveScore > negativeScore:
+         #rtn = int(0.5 + median)
+         rtn = int(0.5 + mean)
+      else:
+         #rtn = int(median)
+         #rtn = int(median - 0.5)
+         rtn = int(mean - 0.5)
+
+      print 'Final Score: {0}'.format(rtn)
+
+      return rtn
+      #return median
+      #return self.meanScore
+      #return 3.8
+      #return crazyScore
 
 def extractReviews(reviews):
    rtn = []
@@ -195,10 +234,20 @@ if __name__ == '__main__':
    print 'RMSE: {0}'.format(crossValidate(allTrainingReviews, lambda trainSet: WordWeightClassifier(trainSet)))
    sys.exit()
 
-   print 'RMSE: {0}'.format(crossValidate(allTrainingReviews, lambda trainSet: NBClassifier(trainSet)))
+   #print 'RMSE: {0}'.format(crossValidate(allTrainingReviews, lambda trainSet: NBClassifier(trainSet), 4, 0))
 
-   random.shuffle(allTrainingReviews)
-   classy = NBClassifier(allTrainingReviews)
+   #random.shuffle(allTrainingReviews)
+   #classy = NBClassifier(allTrainingReviews)
+
+   trainSet = allTrainingReviews[:-42]
+   testSet = allTrainingReviews[-42:]
+
+   classy = NBClassifier(trainSet)
+
+   # TEST
+   print 'Accuracy {0}'.format(classy.accuracy(testSet))
+   classy.showInfo()
+   sys.exit(0)
 
    for review in tests:
       fileName = review['file']
