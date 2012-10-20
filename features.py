@@ -19,6 +19,44 @@ def toUnigrams(document):
 def batchStem(unigrams, stemmer = nltk.stem.PorterStemmer()):
    return [stemmer.stem(gram) for gram in unigrams]
 
+# return hash with things that we are looking for,look at FSG::defineAllFeatures
+def posGroup(document):
+   conj = 0
+   nouns = 0
+   adv = 0
+   adj = 0
+   w = 0
+   v = 0
+   uh = 0
+
+   for (word, tag) in nltk.pos_tag(document):
+      if tag == 'IN':
+         conj += 1
+      elif tag.startswith('N'):
+         nouns += 1
+      elif tag.startswith('J'):
+         adj += 1
+      elif tag.startswith('RB'):
+         adv += 1
+      elif tag.startswith('W'):
+         w += 1
+      elif tag.startswith('V'):
+         v += 1
+      elif tag.startswith('U'):
+         uh += 1
+
+   features = {'<$Num Conjunctions$>': conj,
+               '<$Num Nouns$>': nouns,
+               '<$Num Adverbs$>': adv,
+               '<$Num Adjectives$>': adj,
+               '<$Num Verbs$>': adj,
+               '<$Num Interjections$>': adj,
+               '<$Num W-guys$>': w}
+   print document
+   print features
+   sys.exit()
+   return features
+
 class FeatureSetGenerator:
    #def __init__(self, minOccur = 4, maxOccurPercent = 0.50, stemmer = nltk.stem.PorterStemmer()):
    def __init__(self, minOccur = 2, maxOccurPercent = 0.80, stemmer = nltk.stem.PorterStemmer()):
@@ -39,6 +77,13 @@ class FeatureSetGenerator:
       self.definedFeatures.add('<$Average Word Length$>')
       self.definedFeatures.add('<$Num Words$>')
       self.definedFeatures.add('<$Text Length$>')
+      self.definedFeatures.add('<$Num Conjunctions$>')
+      self.definedFeatures.add('<$Num Nouns$>')
+      self.definedFeatures.add('<$Num Adverbs$>')
+      self.definedFeatures.add('<$Num Adjectives$>')
+      self.definedFeatures.add('<$Num W-guys$>')
+      self.definedFeatures.add('<$Num Interjections$>')
+      self.definedFeatures.add('<$Num Verbs$>')
 
       # { feature => count }
       counts = {}
@@ -81,10 +126,12 @@ class FeatureSetGenerator:
       #features['<$Text Length$>'] = self.rangeify(len(document), 50)
       #features['<$Num Words$>'] = self.rangeify(len(unigrams), 20)
 
-      features['<$Unique Words$>'] = unique
-      features['<$Average Word Length$>'] = avgLen
-      features['<$Text Length$>'] = len(document)
-      features['<$Num Wdefined>'] = len(unigrams)
+      if observeDefinedFeatures:
+         features['<$Unique Words$>'] = unique
+         features['<$Average Word Length$>'] = avgLen
+         features['<$Text Length$>'] = len(document)
+         features['<$Num Wdefined>'] = len(unigrams)
+         features.update(posGroup(document))
 
       if (not compressSet) and observeDefinedFeatures:
          for definedFeature in self.definedFeatures:

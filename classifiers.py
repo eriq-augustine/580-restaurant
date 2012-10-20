@@ -345,3 +345,60 @@ class BinaryClassSplitClassifier:
 #TODO: Jacardian dist classifier
 # Take Jaccardian dist of document to all training ones. Weight by nuimber of docs in both cats.
 # Take the class with the highest avg sim (try mean and median)
+class SetDistClassifier:
+   def __init__(self, trainingSet):
+      self.grams = {}
+
+      #TEST
+      rawClassFeatures = {}
+      for i in range(1, 6):
+         rawClassFeatures[i] = set()
+
+      for trainingDocument in trainingSet:
+         if not self.grams.has_key(trainingDocument[1]):
+            self.grams[trainingDocument[1]] = []
+         grams = set(features.batchStem(features.toUnigrams(trainingDocument[0])))
+         self.grams[trainingDocument[1]].append(grams)
+         rawClassFeatures[trainingDocument[1]] |= grams
+
+      self.uniqueFeatures = {}
+      for i in range(1, 6):
+         self.uniqueFeatures[i] = set(rawClassFeatures[i])
+         for j in range(1, 6):
+            if i != j:
+               self.uniqueFeatures[i] -= rawClassFeatures[j]
+
+   def classifyDocument(self, document, realScore = -1):
+      featureSet = set(features.batchStem(features.toUnigrams(document)))
+
+      scores = {}
+
+      #TEST uniques
+      for (classVal, classGrams) in self.grams.items():
+         scores[classVal] = []
+         for classGram in classGrams:
+            scores[classVal].append(nltk.metrics.distance.jaccard_distance(featureSet, classGram))
+      #TEST all
+      #for i in range(1, 6):
+      #   scores[i] = []
+      #   scores[i].append(nltk.metrics.distance.jaccard_distance(featureSet, self.uniqueFeatures[i]))
+
+      finalDists = {}
+      minDist = 10000
+      bestClass = 4
+      for (classVal, dists) in scores.items():
+         #dist = sum(dists) / float(len(dists))
+
+         ordered = sorted(dists)
+         if len(dists) % 2 == 0 and len(dists) > 0:
+            dist = (dists[len(dists) / 2] + dists[len(dists) / 2 - 1]) / 2
+         else:
+            dist = dists[len(dists) / 2]
+
+         finalDists[classVal] = dist
+         if dist < minDist:
+            minDist = dist
+            bestClass = classVal
+
+      print '{0} -- {1} - r{2}'.format(finalDists, bestClass, realScore)
+      return bestClass

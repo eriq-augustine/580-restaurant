@@ -22,11 +22,14 @@ if __name__ == '__main__':
    allTrainingReviews = extractReviews(reviews)
 
    #TEST
+   #print 'RMSE: {0}'.format(classifiers.crossValidate(allTrainingReviews, lambda trainSet: classifiers.SetDistClassifier(trainSet)))
+   #sys.exit()
+
    #lassy = classifiers.WordWeightClassifier(allTrainingReviews)
-   classy = classifiers.BinaryClassSplitClassifier(allTrainingReviews)
+   #classy = classifiers.BinaryClassSplitClassifier(allTrainingReviews)
    #print 'RMSE: {0}'.format(classifiers.crossValidate(allTrainingReviews, lambda trainSet: classifiers.WordWeightClassifier(trainSet)))
-   print 'RMSE: {0}'.format(classifiers.crossValidate(allTrainingReviews, lambda trainSet: classifiers.BinaryClassSplitClassifier(trainSet)))
-   sys.exit()
+   #print 'RMSE: {0}'.format(classifiers.crossValidate(allTrainingReviews, lambda trainSet: classifiers.BinaryClassSplitClassifier(trainSet)))
+   #sys.exit()
 
    #print 'RMSE: {0}'.format(classifiers.crossValidate(allTrainingReviews, lambda trainSet: classifiers.NBClassifier(trainSet), 4, 0))
 
