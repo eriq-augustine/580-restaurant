@@ -65,11 +65,17 @@ def ex3(reviews, tests, predictionInfo):
    transReviews = []
    names = []
    for review in reviews:
+      for cat in ['food', 'service', 'venue', 'overall']:
+         transReviews.append((review[cat + 'Review'], review['reviewer']))
+         names.append('{0}::{1}'.format(review['file'], review['position']))
+   '''
+   for review in reviews:
       doc = ''
       for cat in ['food', 'service', 'venue', 'overall']:
          doc += ' ' + review[cat + 'Review']
       transReviews.append((doc, review['reviewer']))
       names.append('{0}::{1}'.format(review['file'], review['position']))
+   '''
 
    rmse = classifiers.crossValidate(transReviews, lambda trainSet: classifiers.NBClassifier(trainSet), 4, names, True)
    print 'Average RMS error rate on validation set: {0}\n'.format(rmse)
@@ -77,11 +83,19 @@ def ex3(reviews, tests, predictionInfo):
    classy = classifiers.NBClassifier(transReviews)
    for test in tests:
       key = '{0}::{1}'.format(test['file'], test['position'])
-      doc = ''
+      predictions = {}
       for cat in ['food', 'service', 'venue', 'overall']:
-         doc += ' ' + review[cat + 'Review']
-      prediction = classy.classifyDocument(doc)
-      predictionInfo[key]['reviewer'] = prediction
+         prediction = classy.classifyDocument(review[cat + 'Review'])
+         if not predictions.has_key(prediction):
+            predictions[prediction] = 1
+         else:
+            predictions[prediction] += 1
+      if len(predictions) == 4:
+         # Random plz
+         finalPrediction = predictions.keys()[random.randint(0, len(predictions) - 1)]
+      else:
+         finalPrediction = max(predictions, key=predictions.get)
+      predictionInfo[key]['reviewer'] = finalPrediction
 
 def doAssignment(reviews, tests):
    predictionInfo = {}
@@ -89,10 +103,9 @@ def doAssignment(reviews, tests):
    for test in tests:
       predictionInfo['{0}::{1}'.format(test['file'], test['position'])] = {}
 
-   # TEST
    ex1(reviews, tests, predictionInfo)
-   #ex2(reviews, tests, predictionInfo)
-   #ex3(reviews, tests, predictionInfo)
+   ex2(reviews, tests, predictionInfo)
+   ex3(reviews, tests, predictionInfo)
 
    print predictionInfo
 

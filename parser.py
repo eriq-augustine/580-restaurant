@@ -3,8 +3,8 @@ import re
 import sys
 
 #TEST
-#TRAINING_DIR = 'training'
-TRAINING_DIR = 'full/training'
+TRAINING_DIR = 'training'
+#TRAINING_DIR = 'full/training'
 TEST_DIR = 'test'
 
 REVIEW_REGEX = '^(?:\<p\>)?(.+)(?:\<\/p\>)?$'

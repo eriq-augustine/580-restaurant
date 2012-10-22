@@ -139,7 +139,7 @@ class NBClassifier:
       #self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.LaplaceProbDist)
       ##self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.MLEProbDist)
       ##self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.GoodTuringProbDist)
-      self.showInfo()
+      #self.showInfo()
 
    def classifyDocument(self, document, realScore = -1):
       return self.classy.classify(self.fsg.toFeatures(document))
