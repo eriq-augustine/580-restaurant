@@ -87,11 +87,17 @@ def grabPara(lastPara, fileObj):
       sys.exit(1)
    return match.group(1)
 
-def getConsValue(objectKey, textValue, line, review):
+def getConsValue(objectKey, textValue, line, review, convertInt = False):
    match = re.search(consValueRegex(textValue), line)
    if not match:
       raise
-   review[objectKey] = match.group(1)
+   if convertInt:
+      try:
+         review[objectKey] = int(match.group(1))
+      except:
+         review[objectKey] = match.group(1)
+   else:
+      review[objectKey] = match.group(1)
 
 # Always returns an array if revirews.
 # Expects cleaned input
@@ -110,10 +116,10 @@ def stringToReviews(content, baseFile):
          # lines[i * 13 + 2]
          # lines[i * 13 + 3]
 
-         getConsValue('foodScore', 'FOOD', lines[i * 13 + 4], review)
-         getConsValue('serviceScore', 'SERVICE', lines[i * 13 + 5], review)
-         getConsValue('venueScore', 'VENUE', lines[i * 13 + 6], review)
-         getConsValue('overallScore', 'RATING', lines[i * 13 + 7], review)
+         getConsValue('foodScore', 'FOOD', lines[i * 13 + 4], review, True)
+         getConsValue('serviceScore', 'SERVICE', lines[i * 13 + 5], review, True)
+         getConsValue('venueScore', 'VENUE', lines[i * 13 + 6], review, True)
+         getConsValue('overallScore', 'RATING', lines[i * 13 + 7], review, True)
 
          # Consume the "WRITTEN REVIEW" line
          # lines[i * 13 + 8]

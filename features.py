@@ -29,7 +29,8 @@ def posGroup(document):
    v = 0
    uh = 0
 
-   for (word, tag) in nltk.pos_tag(document):
+   taggedDoc = nltk.pos_tag(document)
+   for (word, tag) in taggedDoc:
       if tag == 'IN':
          conj += 1
       elif tag.startswith('N'):
@@ -52,9 +53,10 @@ def posGroup(document):
                '<$Num Verbs$>': adj,
                '<$Num Interjections$>': adj,
                '<$Num W-guys$>': w}
-   print document
-   print features
-   sys.exit()
+   #print document
+   #print taggedDoc
+   #print features
+   #sys.exit()
    return features
 
 class FeatureSetGenerator:
@@ -67,31 +69,40 @@ class FeatureSetGenerator:
       self.stemmer = stemmer
       self.definedFeatures = set()
 
+      self.maxUnique = 0
+      self.maxAvgLen = 0
+      self.maxDocLen = 0
+      self.maxNumWords = 0
+
    # This takes all the training data, and specifies which features are allowd.
    # We have to be very careful with our small dataset not to let some outliers pull us around.
    def defineAllFeatures(self, documents):
       self.definedFeatures = set()
 
       # These are in every document, but are numeric, so let them in.
-      self.definedFeatures.add('<$Unique Words$>')
-      self.definedFeatures.add('<$Average Word Length$>')
-      self.definedFeatures.add('<$Num Words$>')
-      self.definedFeatures.add('<$Text Length$>')
-      self.definedFeatures.add('<$Num Conjunctions$>')
-      self.definedFeatures.add('<$Num Nouns$>')
-      self.definedFeatures.add('<$Num Adverbs$>')
-      self.definedFeatures.add('<$Num Adjectives$>')
-      self.definedFeatures.add('<$Num W-guys$>')
-      self.definedFeatures.add('<$Num Interjections$>')
-      self.definedFeatures.add('<$Num Verbs$>')
+#      self.definedFeatures.add('<$Unique Words$>')
+#      self.definedFeatures.add('<$Average Word Length$>')
+#      self.definedFeatures.add('<$Num Words$>')
+#      self.definedFeatures.add('<$Text Length$>')
+#      self.definedFeatures.add('<$Num Conjunctions$>')
+#      self.definedFeatures.add('<$Num Nouns$>')
+#      self.definedFeatures.add('<$Num Adverbs$>')
+#      self.definedFeatures.add('<$Num Adjectives$>')
+#      self.definedFeatures.add('<$Num W-guys$>')
+#      self.definedFeatures.add('<$Num Interjections$>')
+#      self.definedFeatures.add('<$Num Verbs$>')
 
       # { feature => count }
       counts = {}
 
       for document in documents:
+         #features = self.toFullFeatures(document, True, True)
          features = self.toFullFeatures(document)
          for feature in features.keys():
             counts[feature] = counts.get(feature, 0) + 1
+            # All meta features get added automatically.
+            if feature.startswith('<$'):
+               self.definedFeatures.add(feature)
 
       numDocs = len(documents)
 
@@ -100,23 +111,31 @@ class FeatureSetGenerator:
             self.definedFeatures.add(feature)
 
    # Set compression sould NOT be used for Naive Bayes!
-   def toFullFeatures(self, document, observeDefinedFeatures = False, compressSet = False):
+   def toFullFeatures(self, document, observeDefinedFeatures = False, compressSet = False, stemUni = False, stemBi = True):
       features = {}
 
       unigrams = toUnigrams(document)
-      stemmedUnigrams = batchStem(unigrams, self.stemmer)
+      if stemUni or stemBi:
+         stemmedUnigrams = batchStem(unigrams, self.stemmer)
 
       avgLen = 0
       for index in range(0, len(unigrams)):
-         if not observeDefinedFeatures or stemmedUnigrams[index] in self.definedFeatures:
-            features[stemmedUnigrams[index]] = True
+         if stemUni:
+            if not observeDefinedFeatures or stemmedUnigrams[index] in self.definedFeatures:
+               features[stemmedUnigrams[index]] = True
+         else:
+            if not observeDefinedFeatures or unigrams[index] in self.definedFeatures:
+               features[unigrams[index]] = True
          avgLen += len(unigrams[index])
       avgLen /= float(len(unigrams))
 
-      #bigrams = nltk.util.bigrams(stemmedUnigrams)
-      #for gram in bigrams:
-      #   if not observeDefinedFeatures or gram in self.definedFeatures:
-      #      features[gram] = True
+      if stemBi:
+         bigrams = ['{0}-{1}'.format(gram[0], gram[1]) for gram in nltk.util.bigrams(stemmedUnigrams)]
+      else:
+         bigrams = ['{0}-{1}'.format(gram[0], gram[1]) for gram in nltk.util.bigrams(unigrams)]
+      for gram in bigrams:
+         if not observeDefinedFeatures or gram in self.definedFeatures:
+            features[gram] = True
 
       unique = len(set(unigrams))
 
@@ -127,11 +146,57 @@ class FeatureSetGenerator:
       #features['<$Num Words$>'] = self.rangeify(len(unigrams), 20)
 
       if observeDefinedFeatures:
-         features['<$Unique Words$>'] = unique
-         features['<$Average Word Length$>'] = avgLen
-         features['<$Text Length$>'] = len(document)
-         features['<$Num Wdefined>'] = len(unigrams)
-         features.update(posGroup(document))
+#         pass
+
+#         features['<$Unique Words$>'] = unique
+#         features['<$Average Word Length$>'] = avgLen
+#         features['<$Text Length$>'] = len(document)
+#         features['<$Num Words>'] = len(unigrams)
+
+#         for i in range(5, unique, 5):
+#            features['<$Unique Words - {0}$>'.format(i)] = True
+#         for i in range(2, int(avgLen + 1), 1):
+#            features['<$Average Word Length - {0}$>'.format(i)] = True
+#         for i in range(50, len(document), 50):
+#            features['<$Text Length - {0}$>'.format(i)] = True
+#         for i in range(20, len(unigrams), 25):
+#            features['<$Num Words - {0}$>'.format(i)] = True
+
+         for i in range(5, self.maxUnique, 5):
+            if i < unique:
+               features['<$Unique Words - {0}$>'.format(i)] = True
+            else:
+               features['<$Unique Words - {0}$>'.format(i)] = False
+         for i in range(2, int(self.maxAvgLen + 1), 1):
+            if i < int(avgLen + 1):
+              features['<$Average Word Length - {0}$>'.format(i)] = True
+            else:
+              features['<$Average Word Length - {0}$>'.format(i)] = False
+         for i in range(50, self.maxDocLen, 50):
+            if i < len(document):
+               features['<$Text Length - {0}$>'.format(i)] = True
+            else:
+               features['<$Text Length - {0}$>'.format(i)] = False
+         for i in range(20, self.maxNumWords, 25):
+            if i < len(unigrams):
+               features['<$Num Words - {0}$>'.format(i)] = True
+            else:
+               features['<$Num Words - {0}$>'.format(i)] = False
+
+#         features.update(posGroup(unigrams))
+#         posFeats = posGroup(unigrams)
+#         for (key, val) in posFeats.items():
+#            for i in range(2, val, 2):
+#               features['{0}-{1}'.format(key, i)] = True
+      else:
+         if unique > self.maxUnique:
+            self.maxUnique = unique
+         if avgLen > self.maxAvgLen:
+            self.maxAvgLen = avgLen
+         if len(document) > self.maxDocLen:
+            self.maxDocLen = len(document)
+         if len(unigrams) > self.maxNumWords:
+            self.maxNumWords = len(unigrams)
 
       if (not compressSet) and observeDefinedFeatures:
          for definedFeature in self.definedFeatures:
