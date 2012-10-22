@@ -59,7 +59,7 @@ def ex2(reviews, tests, predictionInfo):
          doc[cat] = predictionInfo[key][cat]
       prediction = classy.classifyDocument(doc)
       predictionInfo[key]['loneOverall'] = prediction
-  
+
 def ex3(reviews, tests, predictionInfo):
    # Transforms the documents some
    transReviews = []
@@ -97,15 +97,81 @@ def ex3(reviews, tests, predictionInfo):
          finalPrediction = max(predictions, key=predictions.get)
       predictionInfo[key]['reviewer'] = finalPrediction
 
+def authorConfusion(reviews, tests, predictionInfo):
+   transReviews = []
+   keys = []
+   for review in reviews:
+      doc = ''
+      for cat in ['food', 'service', 'venue', 'overall']:
+         doc += ' ' + review[cat + 'Review']
+         #transReviews.append(review[cat + 'Review'])
+         #keys.append('{0}::{1}'.format(review['file'], review['position']))
+      transReviews.append(doc)
+      keys.append(review['file'])
+   for review in tests:
+      doc = ''
+      for cat in ['food', 'service', 'venue', 'overall']:
+         doc += ' ' + review[cat + 'Review']
+         #transReviews.append(review[cat + 'Review'])
+         #keys.append('{0}::{1}'.format(review['file'], review['position']))
+      transReviews.append(doc)
+      keys.append(review['file'])
+
+   fsg = features.FeatureSetGenerator()
+   fsg.defineAllFeatures(transReviews)
+
+   # Get all the feature sets NOW!
+   featureSets = []
+   for doc in transReviews:
+      featureSets.append(set(fsg.toFullFeatures(doc, False, True, False, False).keys()))
+
+   # {smallerKey: { ... largerKey: [score1, score2, ...] ... } ...}
+   scores = {}
+   # Init the scores!
+   # Matrix is not symetric, always have min key first
+   for key1 in keys:
+      for key2 in keys:
+         ordered = sorted([key1, key2])
+         if not scores.has_key(ordered[0]):
+           scores[ordered[0]] = {}
+         scores[ordered[0]][ordered[1]] = []
+
+   for i in range(0, len(transReviews)):
+      for j in range(i, len(transReviews)):
+         orderedKeys = sorted([keys[i], keys[j]])
+         dist = nltk.metrics.distance.jaccard_distance(featureSets[i], featureSets[j])
+         scores[orderedKeys[0]][orderedKeys[1]].append(dist)
+
+   setKeys = list(set(keys))
+
+   for i in range(0, len(setKeys)):
+      print '{0} -- {1}'.format(i, setKeys[i])
+   print ''
+
+   for i in range(0, len(setKeys)):
+      sys.stdout.write('{0}\t'.format(i))
+   print ''
+
+   for i in range(0, len(setKeys)):
+      for j in range(0, len(setKeys)):
+         if j < i:
+            sys.stdout.write('-\t')
+         else:
+            orderedKeys = sorted([setKeys[i], setKeys[j]])
+            sys.stdout.write('{0}\t'.format(int(classifiers.mean(scores[orderedKeys[0]][orderedKeys[1]]) * 1000) / 10.0))
+      print ''
+
+
 def doAssignment(reviews, tests):
    predictionInfo = {}
 
    for test in tests:
       predictionInfo['{0}::{1}'.format(test['file'], test['position'])] = {}
 
-   ex1(reviews, tests, predictionInfo)
-   ex2(reviews, tests, predictionInfo)
-   ex3(reviews, tests, predictionInfo)
+   #ex1(reviews, tests, predictionInfo)
+   #ex2(reviews, tests, predictionInfo)
+   #ex3(reviews, tests, predictionInfo)
+   authorConfusion(reviews, tests, predictionInfo)
 
    print predictionInfo
 

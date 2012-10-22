@@ -135,8 +135,8 @@ class NBClassifier:
 
       #self.classy = nltk.DecisionTreeClassifier.train(self.labeledDocsToFeatures(trainingSet))
 
-      self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.ELEProbDist)
-      #self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.LaplaceProbDist)
+      #self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.ELEProbDist)
+      self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.LaplaceProbDist)
       ##self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.MLEProbDist)
       ##self.classy = nltk.NaiveBayesClassifier.train(self.labeledDocsToFeatures(trainingSet), nltk.probability.GoodTuringProbDist)
       #self.showInfo()
