@@ -34,16 +34,20 @@ There were many methods that did not make it and they may or may not be mentione
 If you are curious about them, I would love to talk about them and they should still be lurking in
 my code.
 
-On of my themes on this project was not using external dictionaries. They are not as fun.
+Along the way, I used both ``Natural Language Processing with Python''\cite{pythonNlltk} and
+``Speech and Language Processing''\cite{jurafsky} for inspiration.
+
+On of my themes on this project was not using external dictionaries. They are not as fun. Therfore,
+I avoided pre-tagged word corpera such as Sentiwordnew\cite{sentiwordnet} and ANEW\cite{anew}.
 
 \section{The Team}
-It is just me :.(
+It is just me :.(\cite{spoons}
 
 \section{Predicting Paragraphs}
 For paragraph prediction, I ended up using the mean of two orthogonal methods.
 
 \subsection{Naive Bayes Classifier}
-The first method was a Naive Bayes classifier. Most of the work with the classifier went into feature selection.
+The first method was a Naive Bayes classifier from the NLTK package\cite{nltk}. Most of the work with the classifier went into feature selection.
 However, I did do something a little different with the classifier. I choose to use a Laplace Probability Distribution
 instead of the default ELE Probability Distribution.
 
@@ -132,6 +136,10 @@ Jacob Muir also had a 0.142 similarity with himself.
 However, for the most part there is not a large correlation between the Jaccardian distance and the author.
 
 \section{Conclusions}
+In the end, I don't think that this is a very informative dataset. It was small and the documents were short, a deadly combination.
+I think what could have helped most was going over some reviews more as a class. Making sure that everybody conforms to the format and
+scales. For example, I know some people who thought that it was a four point scale; and there we some people who placed the paragraphs out of order.
+In a small dataset such as this, that could have a large impact.
 
 \bibliographystyle{acm}
 \bibliography{refs}
