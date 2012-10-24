@@ -64,11 +64,11 @@ def crossValidate(documents, classifierCreator = lambda trainSet: NBClassifier(t
       #print predictions
       # Note that "Average RMSE" is incorrect, just RMSE is correct.
       if names:
-         nameStr = 'Random Validation Set N: ['
+         nameStr = 'Random Validation Set {0}: ['.format(i)
          for name in currentNames:
             nameStr += '{0}, '.format(name)
          print re.sub(', $', ']', nameStr)
-      print 'Fold RMSE: {0}'.format(foldRmse)
+      print 'Average RMS error rate on validation set: {0}\n'.format(foldRmse)
 
 
    return rmse / numFolds

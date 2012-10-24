@@ -27,7 +27,7 @@ def ex1(reviews, tests, predictionInfo):
    allTrainingNames = extractNames(reviews)
 
    rmse = classifiers.crossValidate(allTrainingReviews, lambda trainSet: classifiers.TwoClassifier(trainSet), 4, allTrainingNames)
-   print 'Average RMS error rate on validation set: {0}\n'.format(rmse)
+   print 'Average RMS error rate on all validation sets: {0}\n'.format(rmse)
 
    classy = classifiers.TwoClassifier(allTrainingReviews)
    for review in tests:
@@ -48,7 +48,7 @@ def ex2(reviews, tests, predictionInfo):
       names.append('{0}::{1}'.format(review['file'], review['position']))
 
    rmse = classifiers.crossValidate(transReviews, lambda trainSet: classifiers.OverallClassifier(trainSet), 4, names)
-   print 'Average RMS error rate on validation set: {0}\n'.format(rmse)
+   print 'Average RMS error rate on all validation sets: {0}\n'.format(rmse)
 
    classy = classifiers.OverallClassifier(transReviews)
    for review in tests:
@@ -78,7 +78,7 @@ def ex3(reviews, tests, predictionInfo):
    '''
 
    rmse = classifiers.crossValidate(transReviews, lambda trainSet: classifiers.NBClassifier(trainSet), 4, names, True)
-   print 'Average RMS error rate on validation set: {0}\n'.format(rmse)
+   print 'Average RMS error rate on all validation sets: {0}\n'.format(rmse)
 
    classy = classifiers.NBClassifier(transReviews)
    for test in tests:
@@ -107,7 +107,7 @@ def authorConfusion(reviews, tests, predictionInfo):
          #transReviews.append(review[cat + 'Review'])
          #keys.append('{0}::{1}'.format(review['file'], review['position']))
       transReviews.append(doc)
-      keys.append(review['file'])
+      keys.append('{0}::{1}'.format(review['file'], review['position']))
    for review in tests:
       doc = ''
       for cat in ['food', 'service', 'venue', 'overall']:
@@ -115,7 +115,7 @@ def authorConfusion(reviews, tests, predictionInfo):
          #transReviews.append(review[cat + 'Review'])
          #keys.append('{0}::{1}'.format(review['file'], review['position']))
       transReviews.append(doc)
-      keys.append(review['file'])
+      keys.append('{0}::{1}'.format(review['file'], review['position']))
 
    fsg = features.FeatureSetGenerator()
    fsg.defineAllFeatures(transReviews)
@@ -144,21 +144,26 @@ def authorConfusion(reviews, tests, predictionInfo):
 
    setKeys = list(set(keys))
 
+   print '\t'
    for i in range(0, len(setKeys)):
       print '{0} -- {1}'.format(i, setKeys[i])
    print ''
 
+   sys.stdout.write('\t')
    for i in range(0, len(setKeys)):
       sys.stdout.write('{0}\t'.format(i))
    print ''
 
    for i in range(0, len(setKeys)):
+      sys.stdout.write('{0}\t'.format(i))
+
       for j in range(0, len(setKeys)):
          if j < i:
             sys.stdout.write('-\t')
          else:
             orderedKeys = sorted([setKeys[i], setKeys[j]])
-            sys.stdout.write('{0}\t'.format(int(classifiers.mean(scores[orderedKeys[0]][orderedKeys[1]]) * 1000) / 10.0))
+            # Dissimilarity to similarity
+            sys.stdout.write('{0:0.3f}\t'.format(1 - classifiers.mean(scores[orderedKeys[0]][orderedKeys[1]])))
       print ''
 
 
@@ -166,14 +171,22 @@ def doAssignment(reviews, tests):
    predictionInfo = {}
 
    for test in tests:
-      predictionInfo['{0}::{1}'.format(test['file'], test['position'])] = {}
+      predictionInfo['{0}::{1}'.format(test['file'], test['position'])] = {'file': test['file'], 'position': test['position']}
 
-   #ex1(reviews, tests, predictionInfo)
-   #ex2(reviews, tests, predictionInfo)
-   #ex3(reviews, tests, predictionInfo)
+   ex1(reviews, tests, predictionInfo)
+   ex2(reviews, tests, predictionInfo)
+   ex3(reviews, tests, predictionInfo)
+
+   for (key, prediction) in predictionInfo.items():
+      print 'now showing predictions for {0}'.format(key)
+      print 'paragraph ratings: {0}, {1}, {2}, {3}'.format(prediction['food'], prediction['service'], prediction['venue'], prediction['overall'])
+      print 'overall rating: {0}'.format(prediction['loneOverall'])
+      print 'author: {0}'.format(prediction['reviewer'])
+      print ''
+
    authorConfusion(reviews, tests, predictionInfo)
 
-   print predictionInfo
+   #print predictionInfo
 
 if __name__ == '__main__':
    reviews = parser.readAllReviews()

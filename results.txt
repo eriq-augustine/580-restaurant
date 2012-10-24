@@ -1,0 +1,8 @@
+test08.html::0,4.0,3.5,3.5,4.0,3.66666666667,Eriq Augustine
+test07.html::0,4.0,4.0,4.0,3.5,4.0,Eriq Augustine
+test06.html::0,4.0,3.5,4.0,4.0,3.83333333333,Eriq Augustine
+test04.html::0,4.0,3.5,4.0,4.0,3.83333333333,Eriq Augustine
+test01.html::0,3.5,3.5,4.0,4.0,3.66666666667,Eriq Augustine
+test03.html::0,4.0,4.0,4.0,4.0,4.0,Eriq Augustine
+test05.html::0,4.0,4.0,3.5,4.0,3.83333333333,Eriq Augustine
+test09.html::0,4.0,3.5,3.5,3.5,3.66666666667,Eriq Augustine

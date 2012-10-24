@@ -1,0 +1,139 @@
+% Restaurants paper writeup
+
+\documentclass[]{IEEEtran}
+
+\usepackage{float}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{color}
+
+\begin{document}
+
+\title{Restaurants: Who Wants Some Eats?}
+
+% author names and affiliations
+% use a multiple column layout for up to two different
+% affiliations
+
+\author{\IEEEauthorblockN{Eriq Augustine}
+\\
+\IEEEauthorblockA{Department of Computer Science\\
+Cal Poly, San Luis Obispo\\
+ \textsf{eaugusti@calpoly.edu}
+}
+}
+
+\maketitle
+
+\thispagestyle{empty}
+\pagestyle{empty}
+
+\section{Introduction}
+The methods discussed in this paper will only be methods that made it to the final implementation.
+There were many methods that did not make it and they may or may not be mentioned in this paper.
+If you are curious about them, I would love to talk about them and they should still be lurking in
+my code.
+
+On of my themes on this project was not using external dictionaries. They are not as fun.
+
+\section{The Team}
+It is just me :.(
+
+\section{Predicting Paragraphs}
+For paragraph prediction, I ended up using the mean of two orthogonal methods.
+
+\subsection{Naive Bayes Classifier}
+The first method was a Naive Bayes classifier. Most of the work with the classifier went into feature selection.
+However, I did do something a little different with the classifier. I choose to use a Laplace Probability Distribution
+instead of the default ELE Probability Distribution.
+
+\subsection{Feature Selection}
+My feature selection can be divided into two parts: grams and features of the text.
+
+\subsubsection{Grams}
+I found that trigrams were not very informative, so I stuck with bigrams and unigrams.
+I choose to stem unigrams, but leave bigrams unstemmed. Experiment has shown that this works a little better than
+stemming or not stemming both. I used a Porter's stemmer, in the past I have found that it works well.
+
+The gram selection takes two stages. The first stage is feeding all of the training data into my feature set generator.
+I then find the frequencies for all of the unigrams and bigrams. I then discard all of the grams that do not occur in
+at least two different paragraphs and less than 80\% of the paragraphs. This allows me to get rid of local stopwords
+without having to rely on an external list, and git rid of somewhat unique words.
+
+When finding the gram features for a specific document, the present features were given an ``True'', and the absent
+features were turned off and given a ``False''. I have found that the NLTK Native Bayes classifier does not do
+well when the absent features are not denoted with a false.
+
+\subsubsection{Text Features}
+I also tried to capture some information about the text and make them into features.
+I have found that the most informative text features that I found were:
+
+\begin{itemize}
+   \item Number of Unique Words
+   \item Mean Length of Words
+   \item Length of Entire Document
+   \item Number of Total Words
+\end{itemize}
+
+What all of these features are pretty obvious, but there is more to be done before putting them into the classifier.
+The NLTK Naive Bayes classifier does not handle numeric properties well. So in order to combat this, I rangified the
+featured. Therefore instead of saying that a document has 55 unique words, I say that this document has
+20, 25, 30, 35, 40, 45, 50, and 55 unique words. This way, the classifier can more easily make splits.
+
+I tried using POS tagging, and then grouping together similar tags eg. NN, NNS, NNP, and NNPS all go into the ``noun''
+group. And then using the counts as features. However, I did not find these informative and POS tagging takes too long.
+
+\subsection{Word Weight}
+The second paragraph predicting method I used is a word sentiment based method that I call ``Word Weight''.
+
+When training my Word Weight classifier, I first find them mean and median of all the scores in the training set. I then
+assign a score to every word that is the median of all the scores for paragraphs that the word occurs in. I ignore words that
+occur in less than six documents and that occur in more than 40\% of documents. These values were found experimentally.
+
+When classifying a document, I first lookup all the scores from the training for each word in the document.
+I then keep two running totals. One total for words with a score that is less than the mean score of the training set, and
+one for all words with a score greater than or equal to the mean from the training set. I go through each word and add the
+absolute difference between the training mean and the words score to its respective sum. If there are no words that fall into
+one of the categories, then I give it a value of 0.0005. Difference of the two scores over the sum of the two scores and multiply
+that by 0.5 and add it to the mean from the training set. I then round that number, and that is my score for the document.
+
+The idea behind this is that the ratio of positive to negative words will drag the prediction away from the global mean. If
+there is a tie, then the mean is guessed. I have found that rounding usually decreases my RMSE, so I do that.
+
+\subsection{Combination}
+I have found that my two orthogonal methods tend to cover for each other deficiencies. So to combine the results from each,
+I just take the mean of the two.
+
+\section{Predicting Overall}
+My overall prediction scheme is highly dependent on my work for paragraph prediction. I simply take the mean of my guesses for
+the ``food'', ``venue'', and ``service'' paragraphs. I do not use my prediction for the ``overall'' paragraph because I feel that
+it would provide an unnecessary skew. Also, I feel that using a value already provided to predict the same value would most likely
+contribute to a negative feedback loop.
+
+\section{Predicting Author}
+My author prediction in very simple. I just use a Naive Bayes classifier trained with the features that I discussed earlier.
+I did not try to do any thing with the scores, because I fell that on this particular dataset they are fairly arbitrary and do not provide useful insight into
+the author's identity.
+
+\section{Author Similarity}
+I did the author similarity exercise. As my similarity metric I used Jaccardian distance, which is actually dissimilarity, but I just subtracted it from 1.
+I concatenated the paragraphs for each review and then broke them up into the same features that I used from the author prediction.
+I then just took the Jaccard distance between each feature set.
+
+Because I did the similarity comparison bassed off of review and not author, the matrix is too large to be placed into this paper. It is placed inside the included
+``matrix.txt'' file.
+
+The closest similarity I have is 0.278 and that is with Ryan Verdon and test08. After investigating, I found that test08 is Ryan reviewing Denny's while the one it
+is similar to is Ryan reviewing IHOP. It makes sense that Ryan reviewing two similar places yields a similar score. He even mentions the other place in each respective
+review. Ryan also had a 0.146 similarity to another one of his reviews.
+
+Jacob Muir also had a 0.142 similarity with himself.
+
+However, for the most part there is not a large correlation between the Jaccardian distance and the author.
+
+\section{Conclusions}
+
+\bibliographystyle{acm}
+\bibliography{refs}
+
+\end{document}
